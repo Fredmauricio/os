@@ -28,15 +28,19 @@
    @since     2016
    ------------------------------------------------------------------------
  */
+
 $SelPlugin = "SELECT * FROM glpi_plugin_os_config";
 $ResPlugin = $DB->query($SelPlugin);
 $Plugin = $DB->fetchAssoc($ResPlugin);
+
 $EmpresaPlugin = $Plugin['name'];
 $CnpjPlugin = $Plugin['cnpj'];
 $EnderecoPlugin = $Plugin['address'];
 $TelefonePlugin = $Plugin['phone'];
 $CidadePlugin = $Plugin['city'];
 $SitePlugin = $Plugin['site'];
+
+
 $SelTicket = "SELECT * FROM glpi_tickets WHERE id = '".$_GET['id']."'";
 $ResTicket = $DB->query($SelTicket);
 $Ticket = $DB->fetchAssoc($ResTicket);
