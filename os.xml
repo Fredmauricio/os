@@ -27,7 +27,8 @@
       <version>
          <num>0.3.0-beta1</num>
          <compatibility>~10.1.1</compatibility>
-         <download_url>[Your Download URL]</download_url>
+         <download_url>https://github.com/edlasiopereira/os/archive/refs/tags/0.3.0-beta1.tar.gz
+</download_url>
       </version>
    </versions>
    <langs>
