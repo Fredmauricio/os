@@ -1,4 +1,5 @@
 <?php 
+<?php
 /*
    ------------------------------------------------------------------------
    Plugin OS
@@ -6,7 +7,7 @@
    https://github.com/juniormarcati/os
    ------------------------------------------------------------------------
    LICENSE
-   This file is part of Plugin OS project.
+   pdf file is part of Plugin OS project.
    Plugin OS is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -20,151 +21,229 @@
    ------------------------------------------------------------------------
    @package   Plugin OS
    @author    Junior Marcati
-   @co-author
+   @co-author Edlásio Pereira
    @copyright Copyright (c) 2016-2024 OS Plugin Development team
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
    @link      https://github.com/juniormarcati/os
+   @link      https://github.com/edlasiopereira/os
    @since     2016
    ------------------------------------------------------------------------
  */
+class ConfigOS
+{
+    private $db;
+    private $empresaPlugin;
+    private $cnpjPlugin;
+    private $enderecoPlugin;
+    private $telefonePlugin;
+    private $cidadePlugin;
+    private $sitePlugin;
+    private $ticketId;
+    private $ticketName;
+    private $ticketDate;
+    private $ticketCloseDate;
+    private $ticketSolveDate;
+    private $ticketStatus;
+    private $ticketLocation;
+    private $ticketContent;
+    private $technition;
 
-$SelPlugin = "SELECT * FROM glpi_plugin_os_config";
-$ResPlugin = $DB->query($SelPlugin);
-$Plugin = $DB->fetchAssoc($ResPlugin);
+    // Constructor to initialize with global $DB and set initial values
+    public function __construct($db)
+    {
+        $this->db = $db;
+        $this->fetchPluginConfig(); // Fetch configuration on initialization
+        $this->fetchTicket();
+    }
 
-$EmpresaPlugin = $Plugin['name'];
-$CnpjPlugin = $Plugin['cnpj'];
-$EnderecoPlugin = $Plugin['address'];
-$TelefonePlugin = $Plugin['phone'];
-$CidadePlugin = $Plugin['city'];
-$SitePlugin = $Plugin['site'];
+    // Method to fetch plugin configuration
+    private function fetchPluginConfig()
+    {
+        $query = "SELECT * FROM glpi_plugin_os_config";
+        $result = $this->db->query($query);
 
+        if ($result === false) {
+            die("Error executing query: " . $this->db->error());
+        }
 
-$SelTicket = "SELECT * FROM glpi_tickets WHERE id = '".$_GET['id']."'";
-$ResTicket = $DB->query($SelTicket);
-$Ticket = $DB->fetchAssoc($ResTicket);
-$OsId = $_GET['id'];
-$OsNome = $Ticket['name'];
-$SelDataOs = "SELECT date,date_format(date, '%d/%m/%Y') AS DataOs FROM glpi_tickets WHERE id = '".$_GET['id']."'";
-$ResSelData = $DB->query($SelDataOs);
-$ResSelDataFinal = $DB->fetchAssoc($ResSelData);
-$DataOs = $ResSelDataFinal['DataOs'];
-$SelDataInicial = "SELECT date,date_format(date, '%d/%m/%Y %H:%i') AS DataInicio FROM glpi_tickets WHERE id = '".$_GET['id']."'";
-$ResDataInicial = $DB->query($SelDataInicial);
-$DataInicial = $DB->fetchAssoc($ResDataInicial);
-$OsData = $DataInicial['DataInicio'];
-$OsDescricao = $Ticket['content'];
-$SelDataFinal = "SELECT time_to_resolve,date_format(solvedate, '%d/%m/%Y %H:%i') AS DataFim FROM glpi_tickets WHERE id = '".$_GET['id']."'";
-$ResDataFinal = $DB->query($SelDataFinal);
-$DataFinal = $DB->fetchAssoc($ResDataFinal);
-$OsDataEntrega = $DataFinal['DataFim'];
-$SelSolucaoTicket = "SELECT * FROM glpi_itilsolutions WHERE items_id = '".$_GET['id']."' AND (status = '2' OR status = '3')";
-$ResSolucaoTicket = $DB->query($SelSolucaoTicket);
-$SolucaoTicket = $DB->fetchAssoc($ResSolucaoTicket);
-$OsSolucao = is_null($SolucaoTicket)  ? 0 : $SolucaoTicket['content'];
-$SelTicketUsers = "SELECT * FROM glpi_tickets_users WHERE tickets_id = '".$OsId."'";
-$ResTicketUsers = $DB->query($SelTicketUsers);
-$TicketUsers = $DB->fetchAssoc($ResTicketUsers);
-$OsUserId = $TicketUsers['users_id'];
-$SelIdOsResponsavel = "SELECT users_id FROM glpi_tickets_users WHERE tickets_id = '".$OsId."' AND type = 2";
-$ResIdOsResponsavel = $DB->query($SelIdOsResponsavel);
-$OsResponsavel = "";
-while ($IdOsResponsavel = $DB->fetchAssoc($ResIdOsResponsavel)) {
-	$SelOsResponsavelName = "SELECT * FROM glpi_users WHERE id = '".$IdOsResponsavel['users_id']."'";
-	$ResOsResponsavelName = $DB->query($SelOsResponsavelName);
-	$OsResponsavelFull = $DB->fetchAssoc($ResOsResponsavelName);
-	$OsResponsavel .= $OsResponsavelFull['firstname']. " " .$OsResponsavelFull['realname']. ", ";
+        $pluginData = $this->db->fetchAssoc($result);
+
+        // Set properties
+        $this->empresaPlugin = $pluginData['name'];
+        $this->cnpjPlugin = $pluginData['cnpj'];
+        $this->enderecoPlugin = $pluginData['address'];
+        $this->telefonePlugin = $pluginData['phone'];
+        $this->cidadePlugin = $pluginData['city'];
+        $this->sitePlugin = $pluginData['site'];
+    }
+
+    private function fetchTicket()
+    {
+        $query = "SELECT t.id AS id,
+                    t.name AS name,
+                    t.content as content,
+                    t.date AS date,
+                    t.closedate AS closedate,
+                    t.solvedate AS solvedate,
+                    t.status AS status,
+                    l.name AS location_name
+                    FROM glpi_tickets AS t
+                    INNER JOIN glpi_locations AS l ON t.locations_id = l.id
+                    WHERE t.id = '" . $_GET['id'] . "'";
+
+        $result = $this->db->query($query);
+        $ticketData = $this->db->fetchAssoc($result);
+
+        //set property
+        $this->ticketId = $ticketData['id'];
+        $this->ticketName = $ticketData['name'];
+        $this->ticketDate = $ticketData['date'];
+        $this->ticketCloseDate = $ticketData['closedate'];
+        $this->ticketSolveDate = $ticketData['solvedate'];
+        $this->ticketStatus = $ticketData['status'];
+        $this->ticketLocation = $ticketData['location_name'];
+        $this->ticketContent = $ticketData['content'];
+    }
+
+    // Getter and setter for $empresaPlugin
+    public function getEmpresaPlugin()
+    {
+        return $this->empresaPlugin;
+    }
+
+    // Getter and setter for $cnpjPlugin
+    public function getCnpjPlugin()
+    {
+        return $this->cnpjPlugin;
+    }
+
+    // Getter and setter for $enderecoPlugin
+    public function getEnderecoPlugin()
+    {
+        return $this->enderecoPlugin;
+    }
+
+    // Getter and setter for $telefonePlugin
+    public function getTelefonePlugin()
+    {
+        return $this->telefonePlugin;
+    }
+
+    // Getter and setter for $cidadePlugin
+    public function getCidadePlugin()
+    {
+        return $this->cidadePlugin;
+    }
+
+    // Getter and setter for $sitePlugin
+    public function getSitePlugin()
+    {
+        return $this->sitePlugin;
+    }
+
+    // Getter for ticketId
+    public function getTicketId()
+    {
+        return $this->ticketId;
+    }
+
+    // Getter for ticketName
+    public function getTicketName()
+    {
+        return $this->ticketName;
+    }
+
+    // Getter for ticketDate
+    public function getTicketDate()
+    {
+        return $this->ticketDate;
+    }
+
+    // Getter for ticketCloseDate
+    public function getTicketCloseDate()
+    {
+        return $this->ticketCloseDate;
+    }
+
+    // Getter for ticketSolveDate
+    public function getTicketSolveDate()
+    {
+        return $this->ticketSolveDate;
+    }
+
+    // Getter for ticketSolveDate
+    public function getTicketStatus()
+    {
+        $statusMapping = [
+            1 => 'New',
+            2 => 'Processing (Assigned)',
+            3 => 'Processing (Planned)',
+            4 => 'Pending',
+            5 => 'Solved',
+            6 => 'Closed'
+        ];
+
+        return isset($statusMapping[$this->ticketStatus]) ? $statusMapping[$this->ticketStatus] : 'Unknown';
+    }
+
+    // Getter for ticketSolveDate
+    public function getTicketLocation()
+    {
+        $location = mb_convert_encoding($this->ticketLocation, 'UTF-8', 'auto');
+        return mb_strtoupper($location, 'UTF-8');
+    }
+
+    // Getter for ticketContent
+    public function getTicketContent() {
+      $content = mb_convert_encoding($this->ticketContent, 'UTF-8', 'auto');
+      return mb_strtolower($content, 'UTF-8');
+    }
+
+    public function getUserType($type = 1)
+    { # 1 - Requester # 2 - Tecnition # 3 - Observer
+
+        $query = "SELECT u.name 
+                    from glpi_tickets as t 
+                    inner join glpi_tickets_users as tu on t.id = tu.tickets_id 
+                    inner join glpi_users as u on u.id = tu.users_id
+                    WHERE tu.type = $type AND t.id = '" . $_GET['id'] . "'";
+        $result = $this->db->query($query);
+
+        return $this->db->fetchAssoc($result)['name'];
+    }
+
+    public function getTiketItems()
+    {
+
+        $query = "SELECT
+        COALESCE(computers.name, monitors.name, printers.name, cables.name) AS device_name,
+        COUNT(*) AS count
+    FROM
+        glpi_items_tickets AS items_tickets
+    JOIN
+        glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
+    LEFT JOIN
+        glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
+    LEFT JOIN
+        glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
+    LEFT JOIN
+        glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
+    LEFT JOIN
+        glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
+    
+    WHERE
+        tickets.id = '" . $_GET['id'] . "'
+    GROUP BY
+        device_name;";
+
+        $result = $this->db->query($query);
+
+        // Fetch all rows from the result set
+        $items = [];
+        while ($row = $this->db->fetchAssoc($result)) {
+            $items[] = $row;
+        }
+        return $items;
+    }
 }
-if(strlen($OsResponsavel)>2){
-	$OsResponsavel = substr($OsResponsavel, 0, strlen($OsResponsavel)-2);
-}
-$SelAtendimento = "select max(date_format(date_mod, '%d/%m/%Y %H:%i')) as date_mod from glpi_logs where itemtype like 'Ticket' and id_search_option=12 and new_value=15 and items_id=".$OsId;
-$ResDtAtendimento = $DB->query($SelAtendimento);
-if($ResDtAtendimento){
-	$dtatend = $DB->fetchAssoc($ResDtAtendimento);
-	if($dtatend){
-		$OsDataAtendimento = $dtatend['date_mod'];
-	}	
-}
-$EntidadeId = $Ticket['entities_id'];
-$SelEmpresa = "SELECT * FROM glpi_entities WHERE id = '".$EntidadeId."'";
-$ResEmpresa = $DB->query($SelEmpresa);
-$Empresa = $DB->fetchAssoc($ResEmpresa);
-$EntidadeName = $Empresa['name'];
-$EntidadeCep = $Empresa['postcode'];
-$EntidadeEndereco = $Empresa['address'];
-$EntidadeEmail = $Empresa['email'];
-$EntidadePhone = $Empresa['phonenumber'];
-// select entity rn
-$SelEntityRn = "SELECT * FROM glpi_plugin_os_rn WHERE entities_id = '".$EntidadeId."'";
-$ResEntityRn = $DB->query($SelEntityRn);
-$EntityRnQuery = $DB->fetchAssoc($ResEntityRn);
-$EntityRn = $EntityRnQuery['rn']  ?? "";
-$SelEmail = "SELECT * FROM glpi_useremails WHERE users_id = '".$OsUserId."'";
-$ResEmail = $DB->query($SelEmail);
-$Email = $DB->fetchAssoc($ResEmail);
-$UserEmail = $Email['email'] ?? "";
-$SelCustoLista = "SELECT actiontime, sec_to_time(actiontime) AS Hora,name,cost_time,cost_fixed,cost_material,FORMAT(cost_time,2,'de_DE') AS cost_time2, FORMAT(cost_fixed,2,'de_DE') AS cost_fixed2, FORMAT(cost_material,2,'de_DE') AS cost_material2, SUM(cost_material + cost_fixed + cost_time * actiontime/3600) AS CustoItem FROM glpi_ticketcosts WHERE tickets_id = '".$OsId."' GROUP BY id";
-$ResCustoLista = $DB->query($SelCustoLista);
-$SelCusto = "SELECT SUM(cost_material + cost_fixed + cost_time * actiontime/3600) AS SomaTudo FROM glpi_ticketcosts WHERE tickets_id = '".$OsId."'";
-$ResCusto = $DB->query($SelCusto);
-$Custo = $DB->fetchAssoc($ResCusto);
-$CustoTotal =  $Custo['SomaTudo'] ?? 0;
-$CustoTotalFinal = number_format($CustoTotal, 2, ',', ' ');
-$SelTempoTotal = "SELECT SUM(actiontime) AS TempoTotal FROM glpi_ticketcosts WHERE tickets_id = '".$OsId."'";
-$ResTempoTotal = $DB->query($SelTempoTotal);
-$TempoTotal = $DB->fetchAssoc($ResTempoTotal);
-$seconds = $TempoTotal['TempoTotal'];
-$hours = floor($seconds / 3600);
-$seconds -= $hours * 3600;
-$minutes = floor($seconds / 60);
-$seconds -= $minutes * 60;
-$SelLocId = "SELECT locations_id FROM `glpi_tickets` WHERE id = '".$OsId."'";
-$ResLocId = $DB->query($SelLocId);
-$LocId = $DB->fetchAssoc($ResLocId);
-$LocationsId = $LocId['locations_id'];
-$SelNameLoc = "SELECT name FROM glpi_locations WHERE id = '".$LocationsId."'";
-$ResNameLoc = $DB->query($SelNameLoc);
-$Loc = $DB->fetchAssoc($ResNameLoc);
-$Locations = $Loc['name']  ?? ""; 
-$SelTicketUsers = "SELECT * FROM glpi_tickets_users WHERE tickets_id = '".$OsId."'";
-$ResTicketUsers = $DB->query($SelTicketUsers);
-$TicketUsers = $DB->fetchAssoc($ResTicketUsers);
-$OsUserId = $TicketUsers['users_id'];
-$SelUsers = "SELECT * FROM glpi_users WHERE id = '".$OsUserId."'";
-$ResUsers = $DB->query($SelUsers);
-$Users = $DB->fetchAssoc($ResUsers);
-$UserName = $Users['firstname']. " " .$Users['realname'];
-$UserCpf = $Users['registration_number'];
-$UserTelefone = $Users['mobile'];
-$UserEndereco = $Users['comment'];
-$UserCep = $Users['phone2'];
-$SelEmail = "SELECT * FROM glpi_useremails WHERE users_id = '".$OsUserId."'";
-$ResEmail = $DB->query($SelEmail);
-$Email = $DB->fetchAssoc($ResEmail);
-$UserEmail = $Email['email'] ?? "";
-// select itens
-$SelItens = "SELECT * FROM glpi_items_tickets WHERE tickets_id = '".$OsId."'";
-$ResItens = $DB->query($SelItens);
-$ItensQuery = $DB->fetchAssoc($ResItens);
-$ItemType = $ItensQuery['itemtype'] ?? "";
-$ItensId = $ItensQuery['items_id'] ?? "";
-// select items computers
-$SelComputers = "SELECT * FROM glpi_computers WHERE id = '".$ItensId."'";
-$ResSelComputers = $DB->query($SelComputers);
-$ComputersQuery = $DB->fetchAssoc($ResSelComputers);
-$ComputerName = $ComputersQuery['name'] ?? "";
-$ComputerSerial = $ComputersQuery['serial'] ?? "";
-// select items monitor
-$SelMonitors = "SELECT * FROM glpi_monitors WHERE id = '".$ItensId."'";
-$ResSelMonitors = $DB->query($SelMonitors);
-$MonitorsQuery = $DB->fetchAssoc($ResSelMonitors);
-$MonitorName = $MonitorsQuery['name'] ?? "";
-$MonitorSerial = $MonitorsQuery['serial'] ?? "";
-// select items printers
-$SelPrinters = "SELECT * FROM glpi_printers WHERE id = '".$ItensId."'";
-$ResSelPrinters = $DB->query($SelPrinters);
-$PrintersQuery = $DB->fetchAssoc($ResSelPrinters);
-$PrinterName = $PrintersQuery['name'] ?? "";
-$PrinterSerial = $PrintersQuery['serial'] ?? "";

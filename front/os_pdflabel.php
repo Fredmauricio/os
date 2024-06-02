@@ -6,7 +6,7 @@
    https://github.com/juniormarcati/os
    ------------------------------------------------------------------------
    LICENSE
-   This file is part of Plugin OS project.
+   pdf file is part of Plugin OS project.
    Plugin OS is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -20,11 +20,12 @@
    ------------------------------------------------------------------------
    @package   Plugin OS
    @author    Junior Marcati
-   @co-author
+   @co-author Edlásio Pereira
    @copyright Copyright (c) 2016-2024 OS Plugin Development team
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
    @link      https://github.com/juniormarcati/os
+   @link      https://github.com/edlasiopereira/os
    @since     2016
    ------------------------------------------------------------------------
  */

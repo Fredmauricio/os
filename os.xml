@@ -10,12 +10,13 @@
       </short>
       <long>
          <pt_BR><![CDATA[Plugin para gerar Ordem de Serviço baseado em informações do ticket.]]></pt_BR>
-         </long>
+      </long>
    </description>
    <homepage>https://github.com/juniormarcati/os</homepage>
    <download>https://github.com/juniormarcati/os/releases</download>
    <authors>
       <author>Junior Marcati</author>
+      <author>Edlásio Pereira</author>
    </authors>
    <versions>
       <version>
@@ -23,10 +24,16 @@
          <compatibility>~10.1.1</compatibility>
          <download_url>https://github.com/juniormarcati/os/archive/refs/tags/v0.2.0-beta7.tar.gz</download_url>
       </version>
+      <version>
+         <num>0.3.0-beta1</num>
+         <compatibility>~10.1.1</compatibility>
+         <download_url>[Your Download URL]</download_url>
+      </version>
+   </versions>
    <langs>
       <lang>pt_BR</lang>
-    </langs>
+   </langs>
    <license><![CDATA[AGPL v3+]]></license>
-    <tags>
+   <tags>
    </tags>
 </root>
