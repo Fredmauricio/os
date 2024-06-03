@@ -46,7 +46,6 @@ class ConfigOS
     private $ticketStatus;
     private $ticketLocation;
     private $ticketContent;
-    private $technition;
 
     // Constructor to initialize with global $DB and set initial values
     public function __construct($db)
@@ -54,6 +53,7 @@ class ConfigOS
         $this->db = $db;
         $this->fetchPluginConfig(); // Fetch configuration on initialization
         $this->fetchTicket();
+        $this->getTicketCategoryName();
     }
 
     // Method to fetch plugin configuration
@@ -194,9 +194,10 @@ class ConfigOS
     }
 
     // Getter for ticketContent
-    public function getTicketContent() {
-      $content = mb_convert_encoding($this->ticketContent, 'UTF-8', 'auto');
-      return mb_strtolower($content, 'UTF-8');
+    public function getTicketContent()
+    {
+        $content = mb_convert_encoding($this->ticketContent, 'UTF-8', 'auto');
+        return mb_strtolower($content, 'UTF-8');
     }
 
     public function getUserType($type = 1)
@@ -215,26 +216,16 @@ class ConfigOS
     public function getTiketItems()
     {
 
-        $query = "SELECT
-        COALESCE(computers.name, monitors.name, printers.name, cables.name) AS device_name,
-        COUNT(*) AS count
-    FROM
-        glpi_items_tickets AS items_tickets
-    JOIN
-        glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
-    LEFT JOIN
-        glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
-    LEFT JOIN
-        glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
-    LEFT JOIN
-        glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
-    LEFT JOIN
-        glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
+        $query = "SELECT COALESCE(computers.name, monitors.name, printers.name, cables.name) AS device_name, COUNT(*) AS count
+                    FROM glpi_items_tickets AS items_tickets
+                    JOIN glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
+                    LEFT JOIN glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
+                    LEFT JOIN glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
+                    LEFT JOIN glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
+                    LEFT JOIN glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
     
-    WHERE
-        tickets.id = '" . $_GET['id'] . "'
-    GROUP BY
-        device_name;";
+                    WHERE tickets.id = '" . $_GET['id'] . "'
+                    GROUP BY device_name;";
 
         $result = $this->db->query($query);
 
@@ -245,4 +236,17 @@ class ConfigOS
         }
         return $items;
     }
+
+    public function getTicketCategoryName()
+    { # 1 - Requester # 2 - Tecnition # 3 - Observer
+
+        $query = "SELECT c.name
+                    FROM glpi_tickets t
+                    JOIN glpi_itilcategories c ON t.itilcategories_id = c.id
+                    WHERE t.id = '" . $_GET['id'] . "'";
+
+        $result = $this->db->query($query);
+        return $this->db->fetchAssoc($result)['name'];
+    }
+
 }

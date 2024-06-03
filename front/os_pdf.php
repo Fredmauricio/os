@@ -74,9 +74,9 @@ $pdf->Cell($cellWidth, $cellHeight, 'DADOS DE ENTREGA', 1, 2, 'C', true);
 $pdf->setFillColor(255, 255, 255);
 $pdf->SetFont('Century Gothic', '', 10);
 $content = pdfEncoding(
-  "Nº DO PROTOCOLO: " . $pluginManager->getTicketId() . "\n" .
-    "DATA DE ENTREGA: " . date('d - m - Y', strtotime($pluginManager->getTicketDate())) . "\n" .
-    "PELA DIREÇÃO: " . strtoupper($pluginManager->getUserType(2))
+  "Nº DE PROCESSO: " . $pluginManager->getTicketId() . "\n" .
+    "CATEGORIA: " . strtoupper($pluginManager->getTicketCategoryName()) . "\n" .
+    "NOME DO TÉCNICO: " . strtoupper($pluginManager->getUserType(2))
 );
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
@@ -90,8 +90,8 @@ $pdf->setFillColor(255, 255, 255);
 $pdf->SetFont('Century Gothic', '', 10);
 $content = pdfEncoding(
   "SERVIÇO: " . $pluginManager->getTicketLocation() . "\n" .
-    "PISO: 28/05/2024 \n" .
-    "A/C: " . strtoupper($pluginManager->getUserType())
+  "DATA DE ENTREGA: " . date('d - m - Y', strtotime($pluginManager->getTicketDate())) . "\n" .
+  "SOLICITANTE: " . strtoupper($pluginManager->getUserType())
 );
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
@@ -153,6 +153,7 @@ $pdf->Cell($cellWidth, $cellHeight, '', 1, 0, true);
 // Move to the first cell position and add MultiCell content
 $pdf->SetXY($xPosition1, $yPosition);
 $pdf->MultiCell($cellWidth, $cellHeight, pdfEncoding("VISTO \nDirector Técnico \nEng. Nildo Mafala"), 1, 'C');
+
 
 // Draw second border
 $pdf->SetXY($xPosition2, $yPosition);
