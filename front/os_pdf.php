@@ -45,6 +45,13 @@ function pdfEncoding($string)
   return mb_convert_encoding($string, 'ISO-8859-1', 'UTF-8');
 }
 
+// Helper function to separate names with white space
+function separateName($name) {
+  // Replace the dot with a white space
+  $separatedName = str_replace('.', ' ', $name);
+  return $separatedName;
+}
+
 $pdf = new FPDF();
 $pdf->AddFont('Century Gothic', '', 'Century Gothic.php');
 $pdf->AddFont('gothicb', 'B', 'gothicb.php');
@@ -76,7 +83,7 @@ $pdf->SetFont('Century Gothic', '', 10);
 $content = pdfEncoding(
   "Nº DE PROCESSO: " . $pluginManager->getTicketId() . "\n" .
     "CATEGORIA: " . strtoupper($pluginManager->getTicketCategoryName()) . "\n" .
-    "NOME DO TÉCNICO: " . strtoupper($pluginManager->getUserType(2))
+    "NOME DO TÉCNICO: " . strtoupper(separateName($pluginManager->getUserType(2)))
 );
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
@@ -91,7 +98,7 @@ $pdf->SetFont('Century Gothic', '', 10);
 $content = pdfEncoding(
   "SERVIÇO: " . $pluginManager->getTicketLocation() . "\n" .
   "DATA DE ENTREGA: " . date('d - m - Y', strtotime($pluginManager->getTicketDate())) . "\n" .
-  "SOLICITANTE: " . strtoupper($pluginManager->getUserType())
+  "SOLICITANTE: " . strtoupper(separateName($pluginManager->getUserType()))
 );
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
@@ -126,7 +133,7 @@ if ($content != null) {
   $pdf->SetFont('gothicb', 'B', 10);
   $pdf->Cell(30, $cellHeight, pdfEncoding('OBSERVAÇÃO'), 0, 1);
   $pdf->SetFont('Century Gothic', '', 10);
-  $pdf->Multicell(190, 8, strip_tags(htmlspecialchars_decode($pluginManager->getTicketContent())), 'LRBT');
+  $pdf->Multicell(190, 8, strip_tags(htmlspecialchars_decode(pdfEncoding($pluginManager->getTicketContent()))), 'LRBT');
 }
 
 $pdf->Ln(10);
