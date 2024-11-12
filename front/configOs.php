@@ -200,6 +200,20 @@ class ConfigOS
         return mb_strtolower($content, 'UTF-8');
     }
 
+    // Getter for ticketSolution
+    public function getTicketSolution() 
+    {
+        $query = "SELECT content FROM glpi_itilsolutions WHERE items_id = " . intval($_GET['id']);
+        $result = $this->db->query($query);
+        
+        $row = $this->db->fetchAssoc($result);
+        if ($row !== null) {
+            return $row['content'];
+        } else {
+            return null; // or return an empty string, error message, etc., as appropriate
+        }
+    }
+    
     public function getUserType($type = 1)
     { # 1 - Requester # 2 - Tecnition # 3 - Observer
 

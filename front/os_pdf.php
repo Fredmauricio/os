@@ -52,6 +52,47 @@ function separateName($name) {
   return $separatedName;
 }
 
+function htmlFormatted($html, $pdf) {
+     // Convert HTML entities to UTF-8
+     $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
+ 
+     // Convert HTML tags to FPDF formatting
+     $html = preg_replace('/<br>/i', "\n\n", $html); // Add spacing before new paragraphs
+     $html = preg_replace('/<\/br>/i', "\n\n", $html);
+     $html = preg_replace('/<br\s*\/?>/i', "\n", $html); // Handle line breaks
+ 
+     // Handle formatting
+     $html = preg_replace_callback('/<(strong|b)>(.*?)<\/\1>/i', function ($matches) use ($pdf) {
+         $pdf->SetFont('gothicb', 'B', 10); // Set bold font
+         return $matches[2];
+     }, $html);
+ 
+     $html = preg_replace_callback('/<(em|i)>(.*?)<\/\1>/i', function ($matches) use ($pdf) {
+         $pdf->SetFont('gothicb', 'I', 10); // Set italic font
+         return $matches[2];
+     }, $html);
+ 
+     $html = preg_replace_callback('/<u>(.*?)<\/u>/i', function ($matches) use ($pdf) {
+         $pdf->SetFont('gothicb', '', 10); // Reset to regular font
+         $pdf->SetTextColor(0, 0, 0); // Set text color to black
+         return $matches[1];
+     }, $html);
+ 
+     $html = preg_replace_callback('/<span\s*style="color:(#[0-9a-fA-F]{6})">(.*?)<\/span>/i', function($matches) use ($pdf) {
+         $color = $matches[1];
+         $r = hexdec(substr($color, 1, 2));
+         $g = hexdec(substr($color, 3, 2));
+         $b = hexdec(substr($color, 5, 2));
+         $pdf->SetTextColor($r, $g, $b);
+         return $matches[2];
+     }, $html);
+ 
+  // Strip remaining HTML tags
+  $formattedText = strip_tags($html);
+
+  return $formattedText;
+}
+
 $pdf = new FPDF();
 $pdf->AddFont('Century Gothic', '', 'Century Gothic.php');
 $pdf->AddFont('gothicb', 'B', 'gothicb.php');
@@ -102,7 +143,7 @@ $content = pdfEncoding(
 );
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
-$pdf->Ln(10);
+$pdf->Ln(5);
 
 $pdf->SetDrawColor(0, 0, 0);
 $pdf->SetFont('gothicb', 'B', 10);
@@ -126,7 +167,7 @@ if ($ticketItems == null) {
   }
 }
 
-$pdf->Ln(10);
+$pdf->Ln(5);
 $content = $pluginManager->getTicketContent();
 
 if ($content != null) {
@@ -134,6 +175,15 @@ if ($content != null) {
   $pdf->Cell(30, $cellHeight, pdfEncoding('OBSERVAÇÃO'), 0, 1);
   $pdf->SetFont('Century Gothic', '', 10);
   $pdf->Multicell(190, 8, strip_tags(htmlspecialchars_decode(pdfEncoding($pluginManager->getTicketContent()))), 'LRBT');
+}
+
+$solution = $pluginManager->getTicketSolution();
+if($solution != null) {
+  $pdf->Ln(5);
+  $pdf->SetFont('gothicb', 'B', 10);
+  $pdf->Cell(30, $cellHeight, pdfEncoding('SOLUÇÃO'), 0, 1);
+  $pdf->SetFont('Century Gothic', '', 10);
+  $solution = $pdf->Multicell(190, 8, strip_tags(htmlspecialchars_decode(pdfEncoding(htmlFormatted($pluginManager->getTicketSolution(), $pdf)))), 'LRBT');
 }
 
 $pdf->Ln(10);
