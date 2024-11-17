@@ -79,6 +79,62 @@ class ConfigOS
 
     private function fetchTicket()
     {
+        // Validate and sanitize input
+        $ticketId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+        if ($ticketId <= 0) {
+            throw new InvalidArgumentException("Invalid ticket ID");
+        }
+    
+        // Prepare the SQL query
+        $query = "
+            SELECT 
+                t.id AS id,
+                t.name AS name,
+                t.content AS content,
+                t.date AS date,
+                t.closedate AS closedate,
+                t.solvedate AS solvedate,
+                t.status AS status,
+                l.name AS location_name
+            FROM 
+                glpi_tickets AS t
+            INNER JOIN 
+                glpi_locations AS l 
+            ON 
+                t.locations_id = l.id
+            WHERE 
+                t.id = $ticketId
+        ";
+    
+        // Execute the query
+        $result = $this->db->query($query);
+    
+        // Handle potential database errors
+        if (!$result) {
+            throw new RuntimeException("Database query failed: " . $this->db->error());
+        }
+    
+        // Fetch the result
+        if ($this->db->numRows($result) > 0) {
+            $ticketData = $this->db->fetchAssoc($result);
+    
+            // Set the properties with retrieved data
+            $this->ticketId = $ticketData['id'] ?? null;
+            $this->ticketName = $ticketData['name'] ?? null;
+            $this->ticketDate = $ticketData['date'] ?? null;
+            $this->ticketCloseDate = $ticketData['closedate'] ?? null;
+            $this->ticketSolveDate = $ticketData['solvedate'] ?? null;
+            $this->ticketStatus = $ticketData['status'] ?? null;
+            $this->ticketLocation = $ticketData['location_name'] ?? null;
+            $this->ticketContent = $ticketData['content'] ?? null;
+        } else {
+            throw new Exception("Ticket with ID $ticketId not found");
+        }
+    }
+    
+
+/*     private function fetchTicket()
+    {
         $query = "SELECT t.id AS id,
                     t.name AS name,
                     t.content as content,
@@ -103,7 +159,7 @@ class ConfigOS
         $this->ticketStatus = $ticketData['status'];
         $this->ticketLocation = $ticketData['location_name'];
         $this->ticketContent = $ticketData['content'];
-    }
+    } */
 
     // Getter and setter for $empresaPlugin
     public function getEmpresaPlugin()
@@ -232,20 +288,31 @@ class ConfigOS
 {
     $query = "SELECT 
                 COALESCE(
-                    CONCAT('[Computador] ', computermodels.name), 
+                    CONCAT('[Computador] ', computers.name), 
                     CONCAT('[Monitor] ', monitors.name), 
                     CONCAT('[Impressora] ', printers.name), 
                     CONCAT('[Cabo] ', cables.name), 
                     CONCAT('[Telefone] ', phones.name), 
                     CONCAT('[Periferico]: ', peripherals.name), 
                     CONCAT('[Rede]: ', networkequipments.name), 
-                    CONCAT('[Gabinete]: ', enclosures.name)
+                    CONCAT('[Gabinete]: ', enclosures.name),
+                    CONCAT('[Database]: ', dbase.name),
+                    CONCAT('[Racks]: ', racks.name),
+                    CONCAT('[DCRooms]: ', dcrooms.name),
+                    CONCAT('[Software]: ', softwares.name),
+                    CONCAT('[Disp. Passivo]: ', passive_equip.name),
+                    CONCAT('[PDU]: ', pdus.name),
+                    CONCAT('[Dispositivo]: ', appliances.name),
+                    CONCAT('[Domínio]: ', domains.name),
+                    CONCAT('[Certificado]: ', certificates.name),
+                    CONCAT('[Cluster]: ', clusters.name),
+                    CONCAT('[Inst. Database]: ', databaseinstances.name),
+                    CONCAT('[Reg. Domínio]: ', domainrecords.name)
                 ) AS device_name,
                 COUNT(*) AS count
               FROM glpi_items_tickets AS items_tickets
               JOIN glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
               LEFT JOIN glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
-              LEFT JOIN glpi_computermodels AS computermodels ON computers.computermodels_id = computermodels.id
               LEFT JOIN glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
               LEFT JOIN glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
               LEFT JOIN glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
@@ -253,6 +320,18 @@ class ConfigOS
               LEFT JOIN glpi_peripherals AS peripherals ON items_tickets.items_id = peripherals.id AND items_tickets.itemtype = 'Peripheral'
               LEFT JOIN glpi_networkequipments AS networkequipments ON items_tickets.items_id = networkequipments.id AND items_tickets.itemtype = 'NetworkEquipment'
               LEFT JOIN glpi_enclosures AS enclosures ON items_tickets.items_id = enclosures.id AND items_tickets.itemtype = 'Enclosure'
+              LEFT JOIN glpi_databases AS dbase ON items_tickets.items_id = dbase.id AND items_tickets.itemtype = 'Database'
+              LEFT JOIN glpi_racks AS racks ON items_tickets.items_id = racks.id AND items_tickets.itemtype = 'Rack'
+              LEFT JOIN glpi_dcrooms AS dcrooms ON items_tickets.items_id = dcrooms.id AND items_tickets.itemtype = 'DCRoom'
+              LEFT JOIN glpi_softwares AS softwares ON items_tickets.items_id = softwares.id AND items_tickets.itemtype = 'Software'
+              LEFT JOIN glpi_passivedcequipments AS passive_equip ON items_tickets.items_id = passive_equip.id AND items_tickets.itemtype = 'PassiveDCEquipment'
+              LEFT JOIN glpi_pdus AS pdus ON items_tickets.items_id = pdus.id AND items_tickets.itemtype = 'PDU'
+              LEFT JOIN glpi_appliances AS appliances ON items_tickets.items_id = appliances.id AND items_tickets.itemtype = 'Appliance'
+              LEFT JOIN glpi_domains AS domains ON items_tickets.items_id = domains.id AND items_tickets.itemtype = 'Domain'
+              LEFT JOIN glpi_certificates AS certificates ON items_tickets.items_id = certificates.id AND items_tickets.itemtype = 'Certificate'
+              LEFT JOIN glpi_clusters AS clusters ON items_tickets.items_id = clusters.id AND items_tickets.itemtype = 'Cluster'
+              LEFT JOIN glpi_databaseinstances AS databaseinstances ON items_tickets.items_id = databaseinstances.id AND items_tickets.itemtype = 'DatabaseInstance'
+              LEFT JOIN glpi_domainrecords AS domainrecords ON items_tickets.items_id = domainrecords.id AND items_tickets.itemtype = 'DomainRecord'
               WHERE tickets.id = '" . $_GET['id'] . "'
               GROUP BY device_name;";
 
@@ -265,75 +344,6 @@ class ConfigOS
     }
     return $items;
 }
-
-
-/*     public function getTiketItems()
-    {
-        $query = "SELECT 
-                    COALESCE(
-                        computermodels.name, 
-                        monitors.name, 
-                        printers.name, 
-                        cables.name, 
-                        phones.name, 
-                        peripherals.name, 
-                        networkequipments.name, 
-                        enclosures.name
-                    ) AS device_name,
-                    COUNT(*) AS count
-                  FROM glpi_items_tickets AS items_tickets
-                  JOIN glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
-                  LEFT JOIN glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
-                  LEFT JOIN glpi_computermodels AS computermodels ON computers.computermodels_id = computermodels.id
-                  LEFT JOIN glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
-                  LEFT JOIN glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
-                  LEFT JOIN glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
-                  LEFT JOIN glpi_phones AS phones ON items_tickets.items_id = phones.id AND items_tickets.itemtype = 'Phone'
-                  LEFT JOIN glpi_peripherals AS peripherals ON items_tickets.items_id = peripherals.id AND items_tickets.itemtype = 'Peripheral'
-                  LEFT JOIN glpi_networkequipments AS networkequipments ON items_tickets.items_id = networkequipments.id AND items_tickets.itemtype = 'NetworkEquipment'
-                  LEFT JOIN glpi_enclosures AS enclosures ON items_tickets.items_id = enclosures.id AND items_tickets.itemtype = 'Enclosure'
-                  WHERE tickets.id = '" . $_GET['id'] . "'
-                  GROUP BY device_name;";
-    
-        $result = $this->db->query($query);
-    
-        // Fetch all rows from the result set
-        $items = [];
-        while ($row = $this->db->fetchAssoc($result)) {
-            $items[] = $row;
-        }
-        return $items;
-    } */
-    
-    
-
-/*     public function getTiketItems()
-    {
-
-        $query = "SELECT COALESCE(computers.name, monitors.name, printers.name, cables.name, phones.name, peripherals.name, networkequipments.name, enclosures.name) AS device_name, COUNT(*) AS count
-                    FROM glpi_items_tickets AS items_tickets
-                    JOIN glpi_tickets AS tickets ON items_tickets.tickets_id = tickets.id
-                    LEFT JOIN glpi_computers AS computers ON items_tickets.items_id = computers.id AND items_tickets.itemtype = 'Computer'
-                    LEFT JOIN glpi_monitors AS monitors ON items_tickets.items_id = monitors.id AND items_tickets.itemtype = 'Monitor'
-                    LEFT JOIN glpi_printers AS printers ON items_tickets.items_id = printers.id AND items_tickets.itemtype = 'Printer'
-                    LEFT JOIN glpi_cables AS cables ON items_tickets.items_id = cables.id AND items_tickets.itemtype = 'Cable'
-                    LEFT JOIN glpi_phones AS phones ON items_tickets.items_id = phones.id AND items_tickets.itemtype = 'Phone'
-                    LEFT JOIN glpi_peripherals AS peripherals ON items_tickets.items_id = peripherals.id AND items_tickets.itemtype = 'Peripheral'
-                    LEFT JOIN glpi_networkequipments AS networkequipments ON items_tickets.items_id = networkequipments.id AND items_tickets.itemtype = 'NetworkEquipment'
-                    LEFT JOIN glpi_enclosures AS enclosures ON items_tickets.items_id = enclosures.id AND items_tickets.itemtype = 'Enclosure'
-                    
-                    WHERE tickets.id = '" . $_GET['id'] . "'
-                    GROUP BY device_name;";
-
-        $result = $this->db->query($query);
-
-        // Fetch all rows from the result set
-        $items = [];
-        while ($row = $this->db->fetchAssoc($result)) {
-            $items[] = $row;
-        }
-        return $items;
-    } */
 
     public function getTicketCategoryName()
     { # 1 - Requester # 2 - Tecnition # 3 - Observer
