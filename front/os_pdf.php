@@ -141,6 +141,7 @@ $content = pdfEncoding(
   "DATA DE ENTREGA: " . date('d - m - Y', strtotime($pluginManager->getTicketDate())) . "\n" .
   "SOLICITANTE: " . strtoupper(separateName($pluginManager->getUserType()))
 );
+
 $pdf->Multicell($cellWidth, 8, $content, 'LRB');
 
 $pdf->Ln(5);
@@ -149,21 +150,46 @@ $pdf->SetDrawColor(0, 0, 0);
 $pdf->SetFont('gothicb', 'B', 10);
 
 $ticketItems = $pluginManager->getTiketItems();
-if ($ticketItems == null) {
-} else {
+$getCartridges = $pluginManager->getTicketCartridges();
+$getConsumables = $pluginManager->getTicketConsumables();
+
+if ($getCartridges || $ticketItems || $getConsumables) {
   $pdf->setFillColor(222, 234, 246);
-  $pdf->Cell(10, $cellHeight, '#', 1, 0, 'C', true);
-  $pdf->Cell(140, $cellHeight, 'MATERIAL / EQUIPAMENTO', 1, 0, 'C', true);
+  // $pdf->Cell(10, $cellHeight, '#', 1, 0, 'C', true);
+  $pdf->Cell(150, $cellHeight, 'MATERIAL / EQUIPAMENTO', 1, 0, 'C', true);
   $pdf->Cell(40, $cellHeight, 'QTD', 1, 1, 'C', true);
   $pdf->setFillColor(255, 255, 255);
-
-
   $pdf->SetFont('Century Gothic', '', 10);
+}
+
+if ($ticketItems == null) {
+} else {
+
   foreach ($ticketItems as $index => $item) {
-    $index++;
-    $pdf->Cell(10, $cellHeight, $index, 1, 0, 'C', true);
-    $pdf->Cell(140, $cellHeight, pdfEncoding($item['device_name']), 1, 0, 'L', true);
+    // $index++;
+    // $pdf->Cell(10, $cellHeight, $index, 1, 0, 'C', true);
+    $pdf->Cell(150, $cellHeight, pdfEncoding($item['device_name']), 1, 0, 'L', true);
     $pdf->Cell(40, $cellHeight, $item['count'], 1, 1, 'C', true);
+  }
+}
+
+if ($getCartridges == null) {
+} else {
+  foreach ($getCartridges as $index => $item) {
+    // $index++;
+    // $pdf->Cell(10, $cellHeight, $index, 1, 0, 'C', true);
+    $pdf->Cell(150, $cellHeight, pdfEncoding($item['name']), 1, 0, 'L', true);
+    $pdf->Cell(40, $cellHeight, '1', 1, 1, 'C', true);
+  }
+}
+
+if ($getConsumables == null) {
+} else {
+  foreach ($getConsumables as $index => $item) {
+    // $index++;
+    // $pdf->Cell(10, $cellHeight, $index, 1, 0, 'C', true);
+    $pdf->Cell(150, $cellHeight, pdfEncoding($item['name']), 1, 0, 'L', true);
+    $pdf->Cell(40, $cellHeight, '1', 1, 1, 'C', true);
   }
 }
 
