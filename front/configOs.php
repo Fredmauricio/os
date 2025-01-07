@@ -345,38 +345,6 @@ class ConfigOS
     return $items;
 }
 
-    public function getTicketCartridges() {
-        $query = "SELECT fields.id, cartridges.name
-        FROM glpi_plugin_fields_ticketconsumiveis AS fields
-        INNER JOIN glpi_cartridgeitems AS cartridges ON fields.cartridgeitems_id_cartridgefield LIKE CONCAT('%', cartridges.id, '%')
-        WHERE fields.items_id = '" . $_GET['id'] . "' ";
-
-        $result = $this->db->query($query);
-
-        // Fetch all rows from the result set
-        $items = [];
-        while ($row = $this->db->fetchAssoc($result)) {
-        $items[] = $row;
-        }
-        return $items;    
-    }
-
-    public function getTicketConsumables() {
-        $query = "SELECT fields.id, consumable.name
-        FROM glpi_plugin_fields_ticketconsumiveis AS fields
-        INNER JOIN glpi_consumableitems AS consumable ON fields.consumableitems_id_consumablefield LIKE CONCAT('%', consumable.id, '%')
-        WHERE fields.items_id = '" . $_GET['id'] . "' ";
-
-        $result = $this->db->query($query);
-
-        // Fetch all rows from the result set
-        $items = [];
-        while ($row = $this->db->fetchAssoc($result)) {
-        $items[] = $row;
-        }
-        return $items;    
-    }
-
     public function getTicketCategoryName()
     { # 1 - Requester # 2 - Tecnition # 3 - Observer
 
