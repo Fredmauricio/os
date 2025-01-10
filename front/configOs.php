@@ -345,7 +345,7 @@ class ConfigOS
     return $items;
 }
 
-public function getTicketCartridges() {
+/*public function getTicketCartridges() {
     $id = $_GET['id'];
     $query = "SELECT fields.id, cartridges.name
               FROM glpi_plugin_fields_ticketconsumiveis AS fields
@@ -362,9 +362,12 @@ public function getTicketCartridges() {
     }
    
     return $items;    
-}
+}*/
 
-public function getTicketConsumables() {
+// A forma como o valor de $_GET['id'] é inserido diretamente na consulta pode ser perigosa, pois pode permitir injeção de SQL se um valor malicioso for passado para o parâmetro. O ideal 
+//é usar prepared statements ou bind parameters para evitar isso.
+
+/*public function getTicketConsumables() {
     $id = $_GET['id'];
     $query = "SELECT fields.id, consumable.name
               FROM glpi_plugin_fields_ticketconsumiveis AS fields
@@ -380,7 +383,9 @@ public function getTicketConsumables() {
         $items[] = $row;
     }
     return $items;    
-}
+}*/
+
+
     public function getTicketCategoryName()
     { # 1 - Requester # 2 - Tecnition # 3 - Observer
 
@@ -393,6 +398,50 @@ public function getTicketConsumables() {
         return $this->db->fetchAssoc($result)['name'];
     }
 
+
+    public function getTicketCartridges() {
+    $id = $_GET['id'];
+    $query = "SELECT fields.id, cartridges.name
+              FROM glpi_plugin_fields_ticketconsumiveis AS fields
+              INNER JOIN glpi_cartridgeitems AS cartridges 
+              ON JSON_CONTAINS(fields.cartridgeitems_id_cartridgefield, JSON_QUOTE(cast(cartridges.id as char(10))), '$')
+              WHERE fields.items_id = ?";
+
+    $stmt = $this->db->prepare($query);
+    $stmt->bind_param('s', $id);  // Supondo que 'id' seja do tipo string
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Fetch all rows from the result set
+    $items = [];
+    while ($row = $this->db->fetchAssoc($result)) {
+        $items[] = $row;
+    }
+   
+    return $items;    
+}
+
+
+    public function getTicketConsumables() {
+        $id = $_GET['id'];
+        $query = "SELECT fields.id, consumable.name
+                  FROM glpi_plugin_fields_ticketconsumiveis AS fields
+                  INNER JOIN glpi_consumableitems AS consumable 
+                  ON JSON_CONTAINS(fields.consumableitems_id_consumablefield, JSON_QUOTE(cast(consumable.id as char(10))), '$')
+                  WHERE fields.items_id = ?";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param('s', $id);  // Assumindo que 'id' é uma string
+        $stmt->execute();
+        $result = $stmt->get_result();
+    
+        // Fetch all rows from the result set
+        $items = [];
+        while ($row = $this->db->fetchAssoc($result)) {
+            $items[] = $row;
+        }
+        return $items;
+    }
     
 
 }
